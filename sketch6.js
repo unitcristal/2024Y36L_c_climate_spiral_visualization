@@ -11,7 +11,7 @@ let prevRadius = null;
 let previousAngle = null;
 
 const lastYear = 2024; // 마지막 연도
-const lastMonth = 9; // 마지막 월 (0부터 시작)
+const lastMonth = 10; // 마지막 월 (0부터 시작)
 
 // 중요 참고 anomaly 값들
 const referenceAnomalies = [-1, 0, 1, 1.5, 2];
