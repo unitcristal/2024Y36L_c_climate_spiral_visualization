@@ -17,8 +17,8 @@ let currentMonth = 0; // Month도 0에서 시작 ("Jan"부터 시작)
 
 let previousAnomaly = 0;
 
-const lastYear = 2024; // 마지막 연도 (2024)
-const lastMonth = 8; // Jul의 인덱스는 6
+const lastYear = 2025; // 마지막 연도 (2024)
+const lastMonth = 0; // Jan의 인덱스는 0
 
 const weird_v = 1.5;
 
