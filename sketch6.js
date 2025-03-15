@@ -10,8 +10,8 @@ let currentMonth = 0; // 현재 월 인덱스
 let prevRadius = null;
 let previousAngle = null;
 
-const lastYear = 2024; // 마지막 연도
-const lastMonth = 11; // 마지막 월 (0부터 시작)
+const lastYear = data.getRow(data.getRowCount() - 1).get("Year"); // 년도 자동 갱신
+const lastMonth = 11; // 항상 마지막 달 (12월까지 표현)
 
 // 중요 참고 anomaly 값들
 const referenceAnomalies = [-1, 0, 1, 1.5, 2];
@@ -136,7 +136,11 @@ function draw() {
   currentMonth++;
 
   // 애니메이션 종료 조건
-  if (year == lastYear && currentMonth == lastMonth + 1) {
+  // if (year == lastYear && currentMonth == lastMonth + 1) {
+  //   noLoop();
+  //   return;
+  // }
+  if (currentRow == data.getRowCount()) {
     noLoop();
     return;
   }
