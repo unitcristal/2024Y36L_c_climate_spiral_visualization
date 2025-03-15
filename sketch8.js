@@ -10,9 +10,6 @@ let currentMonth = 0; // 현재 월 인덱스
 let prevRadius = null;
 let previousAngle = null;
 
-const lastYear = data.getRow(data.getRowCount() - 1).get("Year"); // 년도 자동 갱신
-const lastMonth = 11; // 항상 마지막 달 (12월까지 표현)
-
 // 중요 참고 anomaly 값들
 const referenceAnomalies = [-1, 0, 1, 1.5, 2];
 
@@ -50,6 +47,20 @@ function setup() {
 }
 
 function draw() {
+  // Early return if data isn't loaded yet
+  if (!data || !data.getRowCount()) {
+    background(0);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(20);
+    text("Loading data...", width / 2, height / 2);
+    return;
+  }
+
+  // Get the last year from data
+  const lastYear = data.getRow(data.getRowCount() - 1).get("Year");
+  const lastMonth = 11; // 항상 마지막 달 (12월까지 표현)
+
   background(0);
   translate(width / 2, height / 2);
 
@@ -74,16 +85,18 @@ function draw() {
     let row = data.getRow(j);
     let totalMonths = months.length;
     if (j == currentRow) {
-      totalMonths = currentMonth;
+      totalMonths = currentMonth + 1; // Include current month
     }
+
+    previousAngle = null; // Reset for each year
+    prevRadius = null;
 
     for (let i = 0; i < totalMonths; i++) {
       let anomalyStr = row.getString(months[i]);
 
       // 유효성 검사
       if (anomalyStr === "***") {
-        noLoop();
-        return;
+        continue; // Skip invalid data instead of stopping
       }
 
       let anomaly = parseFloat(anomalyStr);
@@ -95,14 +108,33 @@ function draw() {
       }
 
       // anomaly를 반경으로 매핑
-      let angle = getAngle(i); // 변경된 부분: 각도 계산 방식 수정
+      let angle = getAngle(i);
       let radius = mapAnomalyToRadius(anomaly);
 
       let x1 = radius * cos(angle);
       let y1 = radius * sin(angle);
 
+      // Draw point
+      noStroke();
+      let pointColor;
+      if (anomaly < 0) {
+        pointColor = lerpColor(
+          color(0, 0, 255),
+          color(255),
+          map(anomaly, -1, 0, 0, 1)
+        );
+      } else {
+        pointColor = lerpColor(
+          color(255),
+          color(255, 0, 0),
+          map(anomaly, 0, 2, 0, 1)
+        );
+      }
+      fill(pointColor);
+      ellipse(x1, y1, 5, 5);
+
       // 이전 점이 있으면 선 그리기
-      if (previousAngle !== null) {
+      if (previousAngle !== null && prevRadius !== null) {
         let x2 = prevRadius * cos(previousAngle);
         let y2 = prevRadius * sin(previousAngle);
 
@@ -136,24 +168,21 @@ function draw() {
   currentMonth++;
 
   // 애니메이션 종료 조건
-  // if (year == lastYear && currentMonth == lastMonth + 1) {
-  //   noLoop();
-  //   return;
-  // }
-  if (currentRow == data.getRowCount()) {
+  if (currentRow >= data.getRowCount() - 1) {
     noLoop();
     return;
   }
 
-  if (currentMonth == months.length) {
+  if (currentMonth >= months.length) {
     currentRow++;
     currentMonth = 0;
-    if (currentRow == data.getRowCount()) {
+    if (currentRow >= data.getRowCount()) {
       noLoop();
+      return;
     }
   }
 
-  frameRate(60);
+  frameRate(10); // Slower for better visibility
 }
 
 function mapAnomalyToRadius(anomaly) {
@@ -171,7 +200,7 @@ function drawReferenceCircles() {
 
     // 기준선 그리기 (초록색)
     stroke(0, 255, 0); // 초록색
-    strokeWeight(2); // 두께 증가
+    strokeWeight(1);
     noFill();
     circle(0, 0, radius * 2);
 
@@ -196,7 +225,7 @@ function drawReferenceCircles() {
 
 function drawMonthLabels() {
   for (let i = 0; i < months.length; i++) {
-    let angle = getAngle(i); // 변경된 부분: 각도 계산 방식 수정
+    let angle = getAngle(i);
     let x = (maxRadius + baseRadius * 0.5) * cos(angle);
     let y = (maxRadius + baseRadius * 0.5) * sin(angle);
 
@@ -214,8 +243,8 @@ function drawMonthLabels() {
 
 // 추가된 함수: 각도를 계산하여 Dec이 12시 방향에 오도록 함
 function getAngle(i) {
-  let adjustedIndex = (i + 1) % months.length;
-  return map(adjustedIndex, 0, months.length, 0, TWO_PI) - PI / 2;
+  let adjustedIndex = (i + 3) % months.length; // Start from March (3 month offset)
+  return map(adjustedIndex, 0, months.length, 0, TWO_PI) - HALF_PI;
 }
 
 function windowResized() {
